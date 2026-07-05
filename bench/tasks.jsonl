@@ -1,0 +1,12 @@
+{"id": "error-budget-value", "prompt": "What is the monthly error budget for the Acme API?", "expect": {"mode": "contains", "value": "0.05%"}}
+{"id": "sev1-paging", "prompt": "Who is paged first when a SEV-1 incident opens?", "expect": {"mode": "contains", "value": "primary on-call engineer"}}
+{"id": "freeze-allowed-change", "prompt": "During a deploy freeze, what is the only change type allowed?", "expect": {"mode": "contains", "value": "rollback"}}
+{"id": "feature-flag-tool", "prompt": "Which tool does Acme use to manage feature flags?", "expect": {"mode": "contains", "value": "Flagsmith"}}
+{"id": "rate-limit-default", "prompt": "What is the default API rate limit per client?", "expect": {"mode": "contains", "value": "120 requests per minute"}}
+{"id": "soak-environment", "prompt": "In which environment must every release soak before production?", "expect": {"mode": "contains", "value": "staging"}}
+{"id": "soak-duration", "prompt": "How long must a release soak in the staging environment?", "expect": {"mode": "contains", "value": "24 hours"}}
+{"id": "checkout-outage-severity", "prompt": "What severity is a full outage of the checkout flow?", "expect": {"mode": "contains", "value": "SEV-1"}}
+{"id": "postmortem-deadline", "prompt": "Within how many days must a postmortem be published?", "expect": {"mode": "contains", "value": "5 business days"}}
+{"id": "enterprise-uptime", "prompt": "What uptime does the Enterprise SLA guarantee?", "expect": {"mode": "contains", "value": "99.9%"}}
+{"id": "oncall-handover", "prompt": "On which day does the on-call rotation hand over?", "expect": {"mode": "contains", "value": "Monday"}}
+{"id": "rollback-strategy", "prompt": "Acme needs to roll back a bad release. Which deployment strategy does it use?", "expect": {"mode": "contains", "value": "blue-green"}}
