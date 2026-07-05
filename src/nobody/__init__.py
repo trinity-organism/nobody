@@ -2,7 +2,7 @@
 
 No server. No database. No frontier. Just meaning, measured.
 """
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 from .brain import Brain, load, frontier, stats  # noqa: F401
 from .context import compile_context  # noqa: F401

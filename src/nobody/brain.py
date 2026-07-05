@@ -7,6 +7,15 @@ from pathlib import Path
 from .concept import load_concept
 from .frontmatter import FrontmatterError
 
+# Conventional repo docs are documentation, not concepts. A brain can be a repo root,
+# so these coexist with concept files and must not be linted as malformed concepts.
+CONVENTIONAL_DOCS = frozenset(
+    {
+        "README.md", "CHANGELOG.md", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md",
+        "SECURITY.md", "LICENSE.md", "SPEC.md", "ORCHESTRATION.md", "DOGFOOD.md",
+    }
+)
+
 
 @dataclass
 class Issue:
@@ -37,9 +46,15 @@ def load(root) -> Brain:
         return brain
     for path in sorted(root.rglob("*.md")):
         rel = str(path.relative_to(root))
+        # Conventional docs at any level, and any .md with no frontmatter at the brain
+        # root, are documentation — skip, don't error. Malformed frontmatter still errors.
+        if path.name in CONVENTIONAL_DOCS:
+            continue
         try:
             c = load_concept(path)
         except FrontmatterError as e:
+            if not path.read_text(encoding="utf-8", errors="replace").lstrip().startswith("---"):
+                continue  # not a concept at all, just prose
             brain.load_issues.append(Issue("E-FM-PARSE", rel, str(e)))
             continue
         if c.name in brain.concepts:

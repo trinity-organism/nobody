@@ -83,8 +83,15 @@ def test_duplicate_name_across_dirs(tmp_path):
 
 
 def test_parse_error_reported(tmp_path):
-    _write(tmp_path, "broken-front.md", "no frontmatter at all\n")
+    # a file that OPENS frontmatter but breaks it is a real malformed concept
+    _write(tmp_path, "broken-front.md", "---\ntype: concept\n:::garbage:::\n---\nx\n")
     assert "E-FM-PARSE" in _codes(lint(brain_mod.load(tmp_path)))
+
+
+def test_no_frontmatter_is_not_a_concept(tmp_path):
+    # prose with no frontmatter is documentation, skipped — not a malformed concept
+    _write(tmp_path, "just-prose.md", "no frontmatter at all\n")
+    assert "E-FM-PARSE" not in _codes(lint(brain_mod.load(tmp_path)))
 
 
 def test_walls_pass_and_fail(tmp_path):

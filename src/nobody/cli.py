@@ -118,6 +118,38 @@ def cmd_rite(args) -> int:
     return code
 
 
+def cmd_add(args) -> int:
+    """Crystallization: agents write lessons to apocrypha/, linted at write time.
+    Volatile context becomes a permanent, quarantined, verifiable file — never raw canon."""
+    root = Path(args.brain)
+    if not root.is_dir():
+        print(f"no brain at {root}", file=sys.stderr)
+        return 2
+    apo = root / "apocrypha"
+    apo.mkdir(exist_ok=True)
+    dest = apo / f"{args.name}.md"
+    if dest.exists() or (root / f"{args.name}.md").exists():
+        print(f"refused: {args.name} already exists in this brain", file=sys.stderr)
+        return 2
+    body = args.body if args.body else sys.stdin.read()
+    tags = f"\ntags: [{args.tags}]" if args.tags else ""
+    dest.write_text(
+        f"---\ntype: {args.type}\ndescription: {args.description}{tags}\n---\n\n{body.strip()}\n",
+        encoding="utf-8",
+    )
+    b = _load(args.brain)
+    rel = f"apocrypha/{args.name}.md"
+    bad = [i for i in lint(b) if i.level == "error" and i.path == rel]
+    if bad:
+        dest.unlink()
+        for i in bad:
+            print(i, file=sys.stderr)
+        print("refused: the lesson does not survive lint — nothing written", file=sys.stderr)
+        return 1
+    print(f"crystallized (apocryphal): {rel} — promote with `nobody canonize {args.name}`")
+    return 0
+
+
 def cmd_canonize(args) -> int:
     b = _load(args.brain)
     c = b.get(args.name)
@@ -213,6 +245,15 @@ def main(argv=None) -> int:
     s.add_argument("--brain", required=True)
     s.add_argument("--witness", default="", help="seal steps into this hash-chained JSONL")
     s.set_defaults(fn=cmd_rite)
+
+    s = sub.add_parser("add", help="write a lesson to apocrypha/ (linted at write time)")
+    s.add_argument("name")
+    s.add_argument("--brain", required=True)
+    s.add_argument("--type", default="memory")
+    s.add_argument("--description", required=True)
+    s.add_argument("--tags", default="")
+    s.add_argument("--body", default="", help="body text (default: read stdin)")
+    s.set_defaults(fn=cmd_add)
 
     s = sub.add_parser(
         "canonize", help="promote an apocrypha/ concept to canon (lint + walls first)"

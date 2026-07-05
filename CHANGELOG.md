@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0 — 2026-07-05
+
+Crystallization + real-world hardening (both found by dogfooding on live brains):
+
+- **`nobody add`** — agents write lessons to `apocrypha/`, **linted at write time**;
+  a lesson that fails lint is never written. Volatile context becomes a permanent,
+  quarantined, verifiable concept (the "self-evolving codebase" write path).
+- **Conventional docs are not concepts** — README/CHANGELOG/SPEC/etc. and any
+  frontmatter-less prose at the brain root are skipped, not errored. A brain can be
+  a repo root. Malformed frontmatter (opens `---` then breaks) still errors.
+- 47 tests.
+
 ## 0.3.0 — 2026-07-05
 
 Born from dogfooding NOBODY against its creator's own production knowledge base
