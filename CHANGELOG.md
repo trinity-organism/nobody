@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 — 2026-07-05
+
+Born from dogfooding NOBODY against its creator's own production knowledge base
+(39 errors found, including a design error in the tool itself — see DOGFOOD.md):
+
+- **Declared ontologies**: a `type: index` concept may declare `types: [...]` — custom
+  types become legal brain-wide. Hardcoded ontologies lose to living brains.
+
 ## 0.2.0 — 2026-07-05
 
 First real benchmark result: qwen2.5:7b-instruct (local), naked 0/12 → with NOBODY

@@ -44,6 +44,8 @@ A rite declares its steps as body lines starting with `$ `.
 ```
 
 Rules:
+- **Declared ontology (v0.3)**: any `type: index` concept may declare `types: [doctrine, ...]`
+  in its frontmatter — those types become legal brain-wide. The map declares the legal kinds.
 - **Name** = filename stem. MUST match `^[a-z0-9]+(-[a-z0-9]+)*$`. Unique brain-wide.
 - **Frontmatter** is a strict YAML *subset*: `key: value`, inline lists `[a, b]`,
   dash lists. No nesting, no multiline scalars. Unknown syntax is an error, never a guess.

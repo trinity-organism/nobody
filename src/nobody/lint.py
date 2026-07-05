@@ -54,8 +54,20 @@ def _check_council(brain: Brain, c, rel: str) -> list:
     return issues
 
 
+def declared_types(brain: Brain) -> tuple:
+    """A brain's index may extend the ontology: `types: [doctrine, reference]` in
+    any type: index concept. The map declares the legal kinds."""
+    extra = []
+    for c in brain.concepts.values():
+        if c.type == "index":
+            t = c.meta.get("types", [])
+            extra.extend(t if isinstance(t, list) else [t])
+    return tuple(sorted(set(extra)))
+
+
 def lint(brain: Brain, walls: bool = False, timeout: int = 30) -> list:
     issues = list(brain.load_issues)
+    allowed = tuple(KNOWN_TYPES) + declared_types(brain)
     for name in sorted(brain.concepts):
         c = brain.concepts[name]
         rel = str(c.path.relative_to(brain.root))
@@ -63,9 +75,9 @@ def lint(brain: Brain, walls: bool = False, timeout: int = 30) -> list:
             issues.append(Issue("E-NAME", rel, f"name {c.name!r} is not kebab-case"))
         if not c.type:
             issues.append(Issue("E-FM-REQ", rel, "missing required field: type"))
-        elif c.type not in KNOWN_TYPES:
+        elif c.type not in allowed:
             issues.append(
-                Issue("E-TYPE", rel, f"unknown type {c.type!r} (known: {', '.join(KNOWN_TYPES)})")
+                Issue("E-TYPE", rel, f"unknown type {c.type!r} (known: {', '.join(allowed)})")
             )
         if not c.description.strip():
             issues.append(Issue("E-FM-REQ", rel, "missing required field: description"))
