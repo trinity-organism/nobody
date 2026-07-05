@@ -5,6 +5,53 @@ import subprocess
 
 from .brain import Brain, Issue, frontier
 from .concept import KNOWN_TYPES, NAME_RE
+from .rite import parse_steps
+
+COUNCIL_RULES = ("majority", "unanimous", "any-veto")
+
+
+def _check_role(brain: Brain, c, rel: str) -> list:
+    if c.type != "role":
+        return []
+    issues = []
+    if not c.charter.strip():
+        issues.append(Issue("E-ROLE-REQ", rel, "a role MUST declare charter: (what it may do)"))
+    if not c.owes.strip():
+        issues.append(
+            Issue("E-ROLE-REQ", rel, "a role MUST declare owes: (the proof it must deliver)")
+        )
+    if c.heir:
+        heir = brain.concepts.get(c.heir)
+        if heir is None or heir.type != "role":
+            issues.append(
+                Issue("E-HEIR", rel, f"heir {c.heir!r} is not a role — succession crisis")
+            )
+    else:
+        issues.append(
+            Issue("W-SUCCESSION", rel, "no heir: declared — interregnum risk", level="warning")
+        )
+    return issues
+
+
+def _check_council(brain: Brain, c, rel: str) -> list:
+    if c.type != "council":
+        return []
+    issues = []
+    if not c.members:
+        issues.append(Issue("E-COUNCIL-REQ", rel, "a council MUST declare members: [role, ...]"))
+    for m in c.members:
+        member = brain.concepts.get(m)
+        if member is None or member.type != "role":
+            issues.append(Issue("E-COUNCIL-MEMBER", rel, f"member {m!r} is not a role"))
+    if c.rule not in COUNCIL_RULES:
+        issues.append(
+            Issue(
+                "E-COUNCIL-RULE",
+                rel,
+                f"rule {c.rule!r} unknown (known: {', '.join(COUNCIL_RULES)})",
+            )
+        )
+    return issues
 
 
 def lint(brain: Brain, walls: bool = False, timeout: int = 30) -> list:
@@ -31,6 +78,12 @@ def lint(brain: Brain, walls: bool = False, timeout: int = 30) -> list:
                     "cannot be executed is lore, not law",
                 )
             )
+        issues.extend(_check_role(brain, c, rel))
+        issues.extend(_check_council(brain, c, rel))
+        if c.type == "rite" and not parse_steps(c):
+            issues.append(
+                Issue("E-RITE-EMPTY", rel, "a rite MUST declare at least one '$ ' step line")
+            )
     for link, citers in frontier(brain).items():
         issues.append(
             Issue(
@@ -49,27 +102,39 @@ def _run_walls(brain: Brain, timeout: int) -> list:
     issues = []
     for name in sorted(brain.concepts):
         c = brain.concepts[name]
-        if not c.verify.strip():
-            continue
         rel = str(c.path.relative_to(brain.root))
-        try:
-            r = subprocess.run(
-                c.verify,
-                shell=True,
-                cwd=str(brain.root),
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-            )
-        except subprocess.TimeoutExpired:
-            issues.append(Issue("E-WALL-FAIL", rel, f"verify timed out after {timeout}s"))
-            continue
-        if r.returncode != 0:
-            tail = (r.stderr or r.stdout or "").strip().splitlines()
-            issues.append(
-                Issue("E-WALL-FAIL", rel, f"verify exited {r.returncode}: {tail[-1] if tail else ''}")
-            )
+        if c.verify.strip():
+            code, detail = _sh(c.verify, brain, timeout)
+            if code != 0:
+                issues.append(Issue("E-WALL-FAIL", rel, f"verify exited {code}: {detail}"))
+        if c.refute.strip():
+            # advocatus diaboli: the attack MUST fail. If it succeeds, the law falls.
+            code, detail = _sh(c.refute, brain, timeout)
+            if code == 0:
+                issues.append(
+                    Issue(
+                        "E-ADVOCATUS",
+                        rel,
+                        "refute: succeeded — the devil's advocate broke this law; it falls",
+                    )
+                )
     return issues
+
+
+def _sh(cmd: str, brain: Brain, timeout: int):
+    try:
+        r = subprocess.run(
+            cmd,
+            shell=True,
+            cwd=str(brain.root),
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        return 124, f"timed out after {timeout}s"
+    tail = (r.stderr or r.stdout or "").strip().splitlines()
+    return r.returncode, tail[-1] if tail else ""
 
 
 def has_errors(issues) -> bool:

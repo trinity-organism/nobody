@@ -15,3 +15,11 @@ description: Map of the Acme operations brain. Every concept is linked here.
 - [[oncall-rotation]] — who is on call, when
 - [[postmortem-template]] — how we learn from incidents
 - [[feature-flags]] — how flags are managed
+
+Orchestration:
+
+- [[release-captain]] — role: owns production promotions
+- [[incident-commander]] — role: owns incident response
+- [[change-council]] — council: any-veto gate on risky changes
+- [[release-rite]] — rite: the pre-promotion liturgy
+

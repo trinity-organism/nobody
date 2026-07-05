@@ -48,6 +48,7 @@ def load(root) -> Brain:
                 Issue("E-DUP", rel, f"duplicate concept name {c.name!r} (also {other})")
             )
             continue
+        c.apocryphal = rel.startswith("apocrypha/") or rel.startswith("apocrypha\\")
         brain.concepts[c.name] = c
     return brain
 
@@ -75,4 +76,6 @@ def stats(brain: Brain) -> dict:
         "links": links,
         "dangling_links": len(frontier(brain)),
         "walls": sum(1 for c in brain.concepts.values() if c.verify),
+        "advocati": sum(1 for c in brain.concepts.values() if c.refute),
+        "apocryphal": sum(1 for c in brain.concepts.values() if c.apocryphal),
     }

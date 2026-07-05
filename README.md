@@ -41,6 +41,22 @@ gets published anyway.
 The fourth primitive is the one nobody else has: **declared knowledge that cannot be
 executed is lore, not law.** Your agent's brain stops being able to lie to it.
 
+## Orchestration (v0.2) — mined from humanity's oldest multi-agent systems
+
+Churches, crowns and schools of philosophy ran multi-agent coordination for millennia
+under adversarial load. v0.2 transplants their surviving mechanisms — as plain concept
+types, linted like everything else. No workflow engine: orchestration IS knowledge.
+
+| Primitive | Lineage | What it enforces |
+|---|---|---|
+| `type: role` + `charter:`/`owes:`/`heir:` | the King's Two Bodies · vassalage · succession law | roles outlive sessions; delegation has explicit scope, owed proof, and a named heir (`E-HEIR` if unresolved) |
+| `type: council` + `members:`/`rule:` | curia, witan | who must agree, under `majority`/`unanimous`/`any-veto` |
+| `type: rite` + `nobody rite --witness` | liturgy | fixed step sequences, sealed into a tamper-evident hash chain |
+| `refute:` on laws | the Devil's Advocate (1587) | a law stands only if the official attack on it FAILS — `nobody lint --walls` runs both poles |
+| `apocrypha/` + `nobody canonize` | canon formation | agents write freely to quarantine; nothing enters canon without passing the gates |
+
+Full design rationale: [ORCHESTRATION.md](ORCHESTRATION.md).
+
 ## Quickstart
 
 ```bash
@@ -103,7 +119,9 @@ The full format, lint rules, compilation and bench protocol: [SPEC.md](SPEC.md).
 ## Roadmap
 
 - [ ] Real-model bench results in `bench/results/` (multiple models, small vs large)
-- [ ] `nobody add` — structured write-back for agents, linted at write time
+- [x] Governed write-back — `apocrypha/` quarantine + `nobody canonize` (v0.2)
+- [x] Orchestration primitives — roles, councils, rites, advocatus (v0.2)
+- [ ] Orchestration bench: sealed-rite pipelines vs freeform agent loops
 - [ ] Multi-brain composition (`--brain a --brain b`)
 - [ ] GitHub Pages docs site
 

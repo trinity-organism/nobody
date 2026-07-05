@@ -11,6 +11,7 @@ from . import bench as bench_mod
 from . import brain as brain_mod
 from .context import compile_context
 from .lint import has_errors, lint
+from .rite import run_rite, verify_witness
 
 STARTER_INDEX = """---
 type: index
@@ -90,8 +91,56 @@ def cmd_lint(args) -> int:
 
 
 def cmd_compile(args) -> int:
-    out = compile_context(_load(args.brain), args.query, budget=args.budget)
+    out = compile_context(
+        _load(args.brain),
+        args.query,
+        budget=args.budget,
+        include_apocrypha=args.include_apocrypha,
+    )
     print(out.text)
+    return 0
+
+
+def cmd_rite(args) -> int:
+    b = _load(args.brain)
+    c = b.get(args.name)
+    if c is None or c.type != "rite":
+        print(f"no rite named {args.name!r} in {args.brain}", file=sys.stderr)
+        return 2
+    code, results = run_rite(b, c, witness=args.witness)
+    for r in results:
+        mark = "ok" if r["exit"] == 0 else f"FAIL({r['exit']})"
+        print(f"  step {r['step']}: {r['cmd']}  ->  {mark}")
+    if args.witness:
+        ok, n = verify_witness(Path(args.witness))
+        print(f"witness: {args.witness} — chain {'intact' if ok else 'BROKEN'} ({n} records)")
+    print(f"rite {c.name}: {'complete' if code == 0 else 'interrupted'}")
+    return code
+
+
+def cmd_canonize(args) -> int:
+    b = _load(args.brain)
+    c = b.get(args.name)
+    if c is None:
+        print(f"no concept named {args.name!r}", file=sys.stderr)
+        return 2
+    if not c.apocryphal:
+        print(f"{args.name} is already canon", file=sys.stderr)
+        return 2
+    rel = str(c.path.relative_to(b.root))
+    issues = [
+        i
+        for i in lint(b, walls=True)
+        if i.level == "error" and (i.path == rel or args.name in i.path)
+    ]
+    if issues:
+        for i in issues:
+            print(i)
+        print(f"canonization REFUSED: {len(issues)} errors")
+        return 1
+    dest = b.root / f"{c.name}.md"
+    c.path.rename(dest)
+    print(f"canonized: {rel} -> {dest.name}")
     return 0
 
 
@@ -154,7 +203,23 @@ def main(argv=None) -> int:
     s.add_argument("query")
     s.add_argument("--brain", required=True)
     s.add_argument("--budget", type=int, default=2000, help="token budget (default 2000)")
+    s.add_argument(
+        "--include-apocrypha", action="store_true", help="also pack quarantined concepts"
+    )
     s.set_defaults(fn=cmd_compile)
+
+    s = sub.add_parser("rite", help="execute a rite (deterministic step sequence)")
+    s.add_argument("name")
+    s.add_argument("--brain", required=True)
+    s.add_argument("--witness", default="", help="seal steps into this hash-chained JSONL")
+    s.set_defaults(fn=cmd_rite)
+
+    s = sub.add_parser(
+        "canonize", help="promote an apocrypha/ concept to canon (lint + walls first)"
+    )
+    s.add_argument("name")
+    s.add_argument("--brain", required=True)
+    s.set_defaults(fn=cmd_canonize)
 
     s = sub.add_parser("frontier", help="known unknowns: dangling [[links]]")
     s.add_argument("brain")

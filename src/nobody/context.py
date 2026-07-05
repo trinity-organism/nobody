@@ -33,8 +33,14 @@ class Compiled:
     text: str = ""
 
 
-def compile_context(brain: Brain, query: str, budget: int = 2000) -> Compiled:
-    packable = {n: c for n, c in brain.concepts.items() if c.type != "index"}
+def compile_context(
+    brain: Brain, query: str, budget: int = 2000, include_apocrypha: bool = False
+) -> Compiled:
+    packable = {
+        n: c
+        for n, c in brain.concepts.items()
+        if c.type != "index" and (include_apocrypha or not c.apocryphal)
+    }
     scores = bm25(query, {n: _doc_text(c) for n, c in packable.items()})
     top = sorted(scores, key=lambda n: (-scores[n], n))[:TOP_HITS_FOR_EXPANSION]
     for parent in top:

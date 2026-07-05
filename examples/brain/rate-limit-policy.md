@@ -3,6 +3,7 @@ type: law
 description: Default API rate limits protecting the platform and its SLA.
 tags: [api, law]
 verify: python3 -c "import pathlib; assert '99.9%' in pathlib.Path('customer-sla.md').read_text()"
+refute: grep -rl "requests per minute" --include="*.md" . | grep -v rate-limit-policy
 ---
 
 The default API rate limit is 120 requests per minute per client.
