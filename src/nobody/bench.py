@@ -12,6 +12,8 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
+import urllib.error
 import urllib.request
 
 from .brain import Brain
@@ -64,6 +66,9 @@ class OpenAIChat:
         self.name = model
         self.key = os.environ.get(key_env, "") if key_env else ""
 
+    RETRIES = 4
+    BACKOFF = (2, 8, 20, 40)  # seconds, on 429/5xx — free endpoints rate-limit
+
     def complete(self, system: str, user: str) -> str:
         payload = {
             "model": self.model,
@@ -81,9 +86,19 @@ class OpenAIChat:
             data=json.dumps(payload).encode(),
             headers=headers,
         )
-        with urllib.request.urlopen(req, timeout=180) as r:
-            data = json.loads(r.read().decode())
-        return data["choices"][0]["message"]["content"].strip()
+        last = None
+        for attempt in range(self.RETRIES + 1):
+            try:
+                with urllib.request.urlopen(req, timeout=180) as r:
+                    data = json.loads(r.read().decode())
+                return (data["choices"][0]["message"]["content"] or "").strip()
+            except urllib.error.HTTPError as e:
+                last = e
+                if e.code in (429, 500, 502, 503) and attempt < self.RETRIES:
+                    time.sleep(self.BACKOFF[attempt])
+                    continue
+                raise
+        raise last  # pragma: no cover
 
 
 def grade(answer: str, expect: dict) -> bool:

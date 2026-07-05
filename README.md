@@ -11,11 +11,24 @@ run one shell command.
 nobody compile "your task" --brain ./brain
 ```
 
-**Benchmark status (honesty law):** no LLM numbers are published yet. The harness smoke
-(deterministic `mock-oracle` perfect-reader, which isolates retrieval quality and is
-**not** an LLM claim) scores `naked 0.0 → nobody 1.0` on the 12-task example suite.
-Real numbers will appear here only when raw JSONL runs land in [`bench/results/`](bench/results/)
-— negative deltas included. Run it yourself in two commands (below).
+## First measured result
+
+```
+model: qwen2.5:7b-instruct (local, temperature 0)   naked: 0/12   with NOBODY: 12/12
+```
+
+A 7B model running on a laptop answered **every** question about knowledge it was never
+trained on — because the layer delivered it. Naked, it honestly answered "unknown" 12
+times. Raw run: [`bench/results/20260705-qwen2.5-7b-instruct-local.jsonl`](bench/results/20260705-qwen2.5-7b-instruct-local.jsonl).
+
+**What this measures, honestly:** the private-knowledge suite — facts that live in
+*your* brain, not in any model's weights. On this class of task no model size
+compensates for a missing context layer; the result validates end-to-end delivery
+(ranking → budget-packing → the model actually using it), not reasoning gains.
+Reasoning-gain benchmarks (ACE-style) are the next roadmap stage. The harness smoke
+(`mock-oracle`, a deterministic perfect-reader — not an LLM) scores the same suite
+0.0 → 1.0. **Honesty law:** only numbers backed by raw JSONL in
+[`bench/results/`](bench/results/) are cited — negative deltas included.
 
 ## The thesis
 
